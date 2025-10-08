@@ -22,7 +22,8 @@ CONNECTION_STRING = """
 
 def load_material_number_mapper():
     SQL = """
-        SELECT      
+        SELECT   
+            DISTINCT
             LOWER(TRIM(brand)) AS brand,
             LOWER(TRIM(style_id)) AS style,
             TRIM(material_number) AS material_number

@@ -1469,7 +1469,12 @@ class PricingLogic:
         
         # currency mapper
         df_recommendations['currency'] = df_recommendations['country_code'].apply(lambda country_code: COUNTRY_CODE_CURRENCY_MAPPER[country_code])
-
+        
+        #### !!!!
+        # Only UK and CH in local currencies
+        df_recommendations.loc[~df_recommendations['currency'].isin(['CHF','GBP']), 'currency'] = 'EUR'
+        #### !!!!
+        
         # cena v lokalnej mene
         df_recommendations['recom_price_local_currency'] = df_recommendations.apply(lambda row: row['recom_price'] * self.conversion_rates[row['currency']], axis=1)
         
@@ -1510,12 +1515,12 @@ class PricingLogic:
         
         df_export.to_parquet('ap_export.parquet')    
         
-        upload_dataframe_to_azure_blob_storage(
-            df_export,
-            self.settings.export_container_name,
-            self.settings.export_blob_name.format(ts_millis=int(now.timestamp() * 1000)),
-            self.settings.export_connection_string
-        )
+        # upload_dataframe_to_azure_blob_storage(
+        #     df_export,
+        #     self.settings.export_container_name,
+        #     self.settings.export_blob_name.format(ts_millis=int(now.timestamp() * 1000)),
+        #     self.settings.export_connection_string
+        # )
         
     @timeit 
     def _kickz_find_optimal_prices(self):
