@@ -1379,6 +1379,9 @@ class PricingLogic:
                     # ceny pre styl
                     prices = self.prices_with_VAT.get((style, country_code), {})
                     
+                    # currency
+                    currency = self.prices_with_VAT.get((style, country_code),{}).get('currency')
+                    
                     # sell_power, max discount ST
                     sell_power_max_discount_ST = self._get_sell_power_and_max_discount_ST(product,brand, country_code, 
                                                                                           style, category, item_category, item_group0)
@@ -1463,7 +1466,10 @@ class PricingLogic:
         # CHECK NA CHYBNE CENY 
         MAX_DISCOUNT = 0.1 # 1 - maximalna mozna zlava ktoru je mozne dat na produkt 
         df_recommendations = df_recommendations[
-            (df_recommendations['recom_price'].between(df_recommendations['base_price']*MAX_DISCOUNT, df_recommendations['base_price']))
+            (df_recommendations['recom_price'].between(
+                df_recommendations['base_price'] * MAX_DISCOUNT, 
+                df_recommendations['base_price'])
+            )
           & (df_recommendations['base_price'] > 0)
         ]
         
@@ -1485,9 +1491,8 @@ class PricingLogic:
         logger.info('loading material number mapper...')
         df_material_number = load_material_number_mapper()
         
-        # Current time
-        now = dt.datetime.now(dt.timezone.utc)
         df_export = df_recommendations.merge(df_material_number, on=['brand','style'])
+        df_export = df_export[df_export['material_number'] != 'Not Defined']
         
         # becuase of import to Netconomy
         df_export.loc[df_export['country_code'] == 'GB', 'country_code'] = 'UK' # becuase of import to Netconomy
@@ -1498,6 +1503,7 @@ class PricingLogic:
         df_export.loc[df_export['base_price'] != df_export['recom_price'], 'export_status'] = 'DISCOUNT'
         
         # set up dates
+        now = dt.datetime.now(dt.timezone.utc)
         df_export['export_from_date'] = now.strftime("%Y-%m-%dT%H:00:00")
         df_export['export_to_date'] = pd.to_datetime(dt.datetime(2100,1,1)).strftime("%Y-%m-%dT%H:00:00")
         
@@ -1515,12 +1521,12 @@ class PricingLogic:
         
         df_export.to_parquet('ap_export.parquet')    
         
-        # upload_dataframe_to_azure_blob_storage(
-        #     df_export,
-        #     self.settings.export_container_name,
-        #     self.settings.export_blob_name.format(ts_millis=int(now.timestamp() * 1000)),
-        #     self.settings.export_connection_string
-        # )
+        upload_dataframe_to_azure_blob_storage(
+            df_export,
+            self.settings.export_container_name,
+            self.settings.export_blob_name.format(ts_millis=int(now.timestamp() * 1000)),
+            self.settings.export_connection_string
+        )
         
     @timeit 
     def _kickz_find_optimal_prices(self):
