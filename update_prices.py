@@ -1460,7 +1460,7 @@ class PricingLogic:
           & (~df_recommendations['base_price'].isnull())
           & (df_recommendations['recom_change'] != 'NOT ENOUGH DATA')
           & (df_recommendations['master_switch'] == 1)
-          & (df_recommendations['base_price'] != df_recommendations['recom_price'])
+          & (df_recommendations['price'] != df_recommendations['recom_price'])
         ]
         
         # CHECK NA CHYBNE CENY 
