@@ -1,4 +1,3 @@
-import json
 import pandas as pd
 import numpy as np
 import datetime as dt
@@ -1461,6 +1460,7 @@ class PricingLogic:
           & (~df_recommendations['base_price'].isnull())
           & (df_recommendations['recom_change'] != 'NOT ENOUGH DATA')
           & (df_recommendations['master_switch'] == 1)
+          & (df_recommendations['base_price'] != df_recommendations['recom_price'])
         ]
         
         # CHECK NA CHYBNE CENY 
@@ -1498,9 +1498,8 @@ class PricingLogic:
         df_export.loc[df_export['country_code'] == 'GB', 'country_code'] = 'UK' # becuase of import to Netconomy
         df_export['export_country_code'] = 'kickz-' + df_export['country_code']
         
-        # export status based on price
-        df_export['export_status'] = 'ORIGINAL'
-        df_export.loc[df_export['base_price'] != df_export['recom_price'], 'export_status'] = 'DISCOUNT'
+        # export status
+        df_export['export_status'] = 'DISCOUNT'
         
         # set up dates
         now = dt.datetime.now(dt.timezone.utc)
