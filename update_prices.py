@@ -212,7 +212,7 @@ class PricingLogic:
         self.master_switch = df_products_to_score[['style','master_switch']].set_index('style').astype(int).astype(bool).to_dict().get('master_switch')
         self.products = df_products_to_score['product_name'].str.lower().unique().tolist()
         self.styles = df_products_to_score['style'].str.lower().unique().tolist()
-        self.country_codes = [col.split('__')[0] for col in df_products_to_score.columns.unique() if '__discount' in col]
+        self.country_codes = self.settings.countries
         self.style_category = stylesCategory2dict(df_products_to_score)
         self.date_added_mapper = df_products_to_score[['date_added','style']].set_index('style').to_dict().get('date_added')
         

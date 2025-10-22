@@ -91,7 +91,7 @@ def load_competitors_data(credentials, from_date, to_date, threshold):
     if df.empty:
         logger.info('Table is empty!!!')
         
-    return df
+    return df.dropna()
 
 def get_all_products() -> pd.DataFrame:
     """

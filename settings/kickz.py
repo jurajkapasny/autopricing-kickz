@@ -1,17 +1,17 @@
 countries = [
     "AT", 
-    "BE", 
-    "DK", 
-    "FI", 
     "FR", 
-    "DE", 
-    "IT", 
-    "NL", 
-    "NO", 
-    "ES", 
-    "CH", 
-    "SE", 
-    "GB"
+    "DE",
+    "CH",
+    "GB",
+    # "IT", 
+    # "NL", 
+    # "NO", 
+    # "ES", 
+    # "BE", 
+    # "DK", 
+    # "FI", 
+    # "SE", 
 ]
 
 
