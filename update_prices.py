@@ -1477,6 +1477,31 @@ class PricingLogic:
         # currency mapper
         df_recommendations['currency'] = df_recommendations['country_code'].apply(lambda country_code: COUNTRY_CODE_CURRENCY_MAPPER[country_code])
         
+        
+        ### TEMP ###
+        df_export_gs = df_recommendations[['country_code','brand','product_name','style', 'base_price','price', 'recom_price']]
+        df_export_gs['recom_price'] = np.floor(df_export_gs['recom_price']) + 0.95
+        
+        sample_range = 'EXPORT!A2:ZZZ1000000'
+        gapi = GoogleSheetsApi(
+            path_token = self.settings.gs_path_token,
+            path_client_secret = self.settings.gs_path_client_secret
+        ) 
+        logger.info(f'Updating data shape {df_export_gs.shape}...')
+        logger.info(f'Deleting everything from {self.settings.gs_spreadsheet_id}...')
+        gapi.delete_cell_values(
+            sample_spredsheet_id = self.settings.gs_spreadsheet_id,
+            sample_range_name = sample_range
+        )
+        logger.info(f'Inserting new values to {self.settings.gs_spreadsheet_id}...')
+        gapi.update_cell_values(
+            df = df_export_gs.replace(np.nan, ''),
+            sample_spredsheet_id = self.settings.gs_spreadsheet_id,
+            sample_range_name = sample_range,
+            with_header = False
+        )
+        ### TEMP ###
+        
         #### !!!!
         # Only UK and CH in local currencies
         df_recommendations.loc[~df_recommendations['currency'].isin(['CHF','GBP']), 'currency'] = 'EUR'
@@ -1507,6 +1532,13 @@ class PricingLogic:
         df_export['export_from_date'] = now.strftime("%Y-%m-%dT%H:00:00")
         df_export['export_to_date'] = pd.to_datetime(dt.datetime(2100,1,1)).strftime("%Y-%m-%dT%H:00:00")
         
+        #### TEMP ####
+        df_export = df_export[
+            (df_export['brand'] == "bucketz")
+          | (df_export['brand'] == 'new era')
+        ]
+        #### TEMP ####
+        
         df_export = df_export[
             [
                 'material_number', 
@@ -1521,12 +1553,12 @@ class PricingLogic:
         
         df_export.to_parquet('ap_export.parquet')    
         
-        upload_dataframe_to_azure_blob_storage(
-            df_export,
-            self.settings.export_container_name,
-            self.settings.export_blob_name.format(ts_millis=int(now.timestamp() * 1000)),
-            self.settings.export_connection_string
-        )
+        # upload_dataframe_to_azure_blob_storage(
+        #     df_export,
+        #     self.settings.export_container_name,
+        #     self.settings.export_blob_name.format(ts_millis=int(now.timestamp() * 1000)),
+        #     self.settings.export_connection_string
+        # )
         
     @timeit 
     def _kickz_find_optimal_prices(self):
