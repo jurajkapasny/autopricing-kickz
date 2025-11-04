@@ -1534,8 +1534,8 @@ class PricingLogic:
         
         #### TEMP ####
         df_export = df_export[
-            (df_export['brand'] == "bucketz")
-          | (df_export['brand'] == 'new era')
+            (df_export['brand'].isin(['bucketz', 'new era'])) &
+            ((df_export['base_price'] - df_export['recom_price']) > df_export['base_price'] * 0.05)
         ]
         #### TEMP ####
         
@@ -1553,12 +1553,12 @@ class PricingLogic:
         
         df_export.to_parquet('ap_export.parquet')    
         
-        # upload_dataframe_to_azure_blob_storage(
-        #     df_export,
-        #     self.settings.export_container_name,
-        #     self.settings.export_blob_name.format(ts_millis=int(now.timestamp() * 1000)),
-        #     self.settings.export_connection_string
-        # )
+        upload_dataframe_to_azure_blob_storage(
+            df_export,
+            self.settings.export_container_name,
+            self.settings.export_blob_name.format(ts_millis=int(now.timestamp() * 1000)),
+            self.settings.export_connection_string
+        )
         
     @timeit 
     def _kickz_find_optimal_prices(self):
@@ -1568,6 +1568,37 @@ class PricingLogic:
     @timeit
     def _insert_into_s3(self):
         S3RcmndHistory.store(self.df_recommendations)
+        
+    @timeit
+    def upload_dashboard_data(self):
+        df_dashboard = self.df_recommendations
+        df_dashboard['date'] = pd.to_datetime(df_dashboard['date']).dt.date
+        
+        df_dashboard = df_dashboard[
+            ['date','country_code','brand','product_name','style',
+             'base_price','price','recom_price'
+             ,'ads_ctr', 'ads_impressions',
+             'category','item_category','item_group0','item_group1','item_group2'
+        ]].round(2)
+        
+        df_orders  = get_orders(from_date=df_dashboard['date'].iloc[0])
+        df_orders['date'] = pd.to_datetime(df_orders['date']).dt.date
+        
+        df_dashboard = df_dashboard.merge(
+            df_orders[['date','style','brand','quantity','country_code']].rename(columns={'quantity': 'sold_items_day'}),
+            on = ['date', 'brand','style','country_code'],
+            how = 'left'
+        )
+        df_dashboard['sold_items_day'] = df_dashboard['sold_items_day'].fillna(0)
+        
+        upload_dataframe_to_azure_blob_storage(
+            df = df_dashboard,
+            container_name = 'kickz-autopricing',
+            blob_name = f"import/{df_dashboard['date'].unique()[0].isoformat()}.csv",
+            connection_string = self.settings.dashboard_export_connection_string,
+            header=True
+        )
+        
         
     @timeit
     def _cretate_recommendations_backup(self, path, df_recommendations):
@@ -1618,6 +1649,7 @@ class PricingLogic:
             df_recommendations = self.df_recommendations
         )
         
+        
         if insert_into_s3:
             logger.info('Inserting into s3...')
             self._insert_into_s3()
@@ -1628,5 +1660,8 @@ class PricingLogic:
                 df_recommendations = self.df_recommendations, 
                 add_hours = 0
             )
+        
+        logger.info('uploading dashboard data...')
+        self.upload_dashboard_data()
         
         logger.info('pricing algo finished succesfully...')

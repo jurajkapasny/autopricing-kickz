@@ -338,8 +338,8 @@ def df_to_nested_dict(
 
 
 @retry(Exception, total_tries=5, initial_wait=60, backoff_factor=2, logger=logger)   
-def upload_dataframe_to_azure_blob_storage(df, container_name, blob_name, connection_string):
-    csv_data = df.to_csv(index=False, header=False, sep=';')
+def upload_dataframe_to_azure_blob_storage(df, container_name, blob_name, connection_string, header=False):
+    csv_data = df.to_csv(index=False, header=header, sep=';')
     
     # Create blob client
     blob_service_client = BlobServiceClient.from_connection_string(connection_string)

@@ -458,6 +458,17 @@ def get_prices_with_VAT(pricing_logic_data, as_dict=True):
     df_prices['price_EUR'] = df_prices['price_local'] / df_prices['conversion_rate']
     df_prices['base_price_EUR'] = df_prices['base_price_local'] / df_prices['conversion_rate']
     
+    ########## TEMPORARY ########################
+    df_material_number = load_material_number_mapper()
+    df_manual_base_price = pd.read_excel(
+        'AUTOMATIC PRICING BUCKETZ AND NEW ERA.xlsx',
+        usecols=['material_number','UVP_KICKZ_EUR'],
+    ).dropna()
+    df_manual_base_price = df_manual_base_price[['material_number','UVP_KICKZ_EUR']].merge(df_material_number, on='material_number')
+    df_prices = df_prices.merge(df_manual_base_price, on='style', how='left')
+    df_prices.loc[df_prices['UVP_KICKZ_EUR'].notna(), 'base_price_EUR'] = df_prices.loc[df_prices['UVP_KICKZ_EUR'].notna(), 'UVP_KICKZ_EUR']
+    ########## TEMPORARY ########################
+    
     if as_dict:
         prices_dct = df_prices[['style','country_code','price_EUR','base_price_EUR','price_local']]\
                         .drop_duplicates(['style','country_code'])\
