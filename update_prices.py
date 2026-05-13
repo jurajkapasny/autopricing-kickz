@@ -604,7 +604,7 @@ class PricingLogic:
         Nacita vsetky data z CompetitorsPriceHistory 
         """
         to_date = dt.date.today()
-        from_date = to_date - dt.timedelta(days=3)
+        from_date = to_date - dt.timedelta(days=10)
         
         with open(self.settings.google_service_account_json_path, "r") as f:
             credentials = json.load(f)
@@ -1478,29 +1478,29 @@ class PricingLogic:
         df_recommendations['currency'] = df_recommendations['country_code'].apply(lambda country_code: COUNTRY_CODE_CURRENCY_MAPPER[country_code])
         
         
-        ### TEMP ###
-        df_export_gs = df_recommendations[['country_code','brand','product_name','style', 'base_price','price', 'recom_price']]
-        df_export_gs['recom_price'] = np.floor(df_export_gs['recom_price']) + 0.95
+#         ### TEMP ###
+#         df_export_gs = df_recommendations[['country_code','brand','product_name','style', 'base_price','price', 'recom_price']]
+#         df_export_gs['recom_price'] = np.floor(df_export_gs['recom_price']) + 0.95
         
-        sample_range = 'EXPORT!A2:ZZZ1000000'
-        gapi = GoogleSheetsApi(
-            path_token = self.settings.gs_path_token,
-            path_client_secret = self.settings.gs_path_client_secret
-        ) 
-        logger.info(f'Updating data shape {df_export_gs.shape}...')
-        logger.info(f'Deleting everything from {self.settings.gs_spreadsheet_id}...')
-        gapi.delete_cell_values(
-            sample_spredsheet_id = self.settings.gs_spreadsheet_id,
-            sample_range_name = sample_range
-        )
-        logger.info(f'Inserting new values to {self.settings.gs_spreadsheet_id}...')
-        gapi.update_cell_values(
-            df = df_export_gs.replace(np.nan, ''),
-            sample_spredsheet_id = self.settings.gs_spreadsheet_id,
-            sample_range_name = sample_range,
-            with_header = False
-        )
-        ### TEMP ###
+#         sample_range = 'EXPORT!A2:ZZZ1000000'
+#         gapi = GoogleSheetsApi(
+#             path_token = self.settings.gs_path_token,
+#             path_client_secret = self.settings.gs_path_client_secret
+#         ) 
+#         logger.info(f'Updating data shape {df_export_gs.shape}...')
+#         logger.info(f'Deleting everything from {self.settings.gs_spreadsheet_id}...')
+#         gapi.delete_cell_values(
+#             sample_spredsheet_id = self.settings.gs_spreadsheet_id,
+#             sample_range_name = sample_range
+#         )
+#         logger.info(f'Inserting new values to {self.settings.gs_spreadsheet_id}...')
+#         gapi.update_cell_values(
+#             df = df_export_gs.replace(np.nan, ''),
+#             sample_spredsheet_id = self.settings.gs_spreadsheet_id,
+#             sample_range_name = sample_range,
+#             with_header = False
+#         )
+#         ### TEMP ###
         
         #### !!!!
         # Only UK and CH in local currencies
@@ -1534,7 +1534,7 @@ class PricingLogic:
         
         #### TEMP ####
         df_export = df_export[
-            (df_export['brand'].isin(['bucketz', 'new era'])) &
+            #(df_export['brand'].isin(['bucketz', 'new era'])) &
             ((df_export['base_price'] - df_export['recom_price']) > df_export['base_price'] * 0.05)
         ]
         #### TEMP ####

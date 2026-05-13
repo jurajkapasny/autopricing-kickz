@@ -94,7 +94,7 @@ class NewProductsAdder:
         
         if df_category_settings is not None:
             for category in df_category_settings.columns.tolist():
-                values = [v.strip().lower() for v in df_category_settings[category].dropna().tolist()]
+                values = [v.strip().lower() for v in df_category_settings[category].dropna().drop_duplicates().tolist()]
                 category_mapper = dict(zip(values, [category]* len(values)))
                 mapper.update(category_mapper)
             
@@ -160,7 +160,7 @@ class NewProductsAdder:
         """
         logger.info('Creating category column...')
         # Ak je styl na sklade => category=ST inak category=>IMP
-        df['category'] = df.apply(lambda row: 'ST' if quantities_in_inventory.get((row['brand'], row['style']), 0) > 0 else 'IMP', axis=1)
+        df['category'] = df.apply(lambda row: 'ST' if quantities_in_inventory.get((row['brand'], row['style']), 0) > 5 else 'IMP', axis=1)
         
         return df
     
@@ -228,7 +228,7 @@ class NewProductsAdder:
         
         # vytvorenie stplcov
         quantities_in_inventory = self._load_quantities_in_inventory()
-        df_all_products = self._create_category(df_all_products, quantities_in_inventory)
+        d#f_all_products = self._create_category(df_all_products, quantities_in_inventory)
         df_all_products = self._create_date_added(df_all_products)
         
         df_final = (
@@ -248,6 +248,11 @@ class NewProductsAdder:
         # zmena kategorie
         category_mapper = self._load_category_mapper()
         df_final['category'] = df_final.apply(lambda row: category_mapper.get(row['style'], row['category']) , axis=1)
+        
+        st_imp_mask = (~df_final['style'].isin(category_mapper)) & (df_final['category'].isin(['ST', 'IMP', 'nan']))
+        df_final.loc[st_imp_mask, 'category'] = df_final.loc[st_imp_mask, 'style'].apply(
+            lambda style: 'ST' if quantities_in_inventory.get(style, 0) > 5 else 'IMP'
+        )
         
         # wait after relase nastavenie
         wait_after_release_settings = self._load_wait_after_release_settings()
