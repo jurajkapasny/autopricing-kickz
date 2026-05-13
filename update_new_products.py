@@ -228,7 +228,7 @@ class NewProductsAdder:
         
         # vytvorenie stplcov
         quantities_in_inventory = self._load_quantities_in_inventory()
-        d#f_all_products = self._create_category(df_all_products, quantities_in_inventory)
+        df_all_products = self._create_category(df_all_products, quantities_in_inventory)
         df_all_products = self._create_date_added(df_all_products)
         
         df_final = (
