@@ -256,7 +256,9 @@ class NewProductsAdder:
         
         # wait after relase nastavenie
         wait_after_release_settings = self._load_wait_after_release_settings()
+
         df_final['wait_after_release'] = df_final['style'].apply(lambda style: wait_after_release_settings.get(style, 21))
+        # df_final['wait_after_release'] = 21
         
         # master switch nastavenie
         master_switch_styles_settings = self._load_master_switch_styles_settings()

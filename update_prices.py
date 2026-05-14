@@ -1533,10 +1533,10 @@ class PricingLogic:
         df_export['export_to_date'] = pd.to_datetime(dt.datetime(2100,1,1)).strftime("%Y-%m-%dT%H:00:00")
         
         #### TEMP ####
-        df_export = df_export[
-            #(df_export['brand'].isin(['bucketz', 'new era'])) &
-            ((df_export['base_price'] - df_export['recom_price']) > df_export['base_price'] * 0.05)
-        ]
+        # df_export = df_export[
+        #     #(df_export['brand'].isin(['bucketz', 'new era'])) &
+        #     ((df_export['base_price'] - df_export['recom_price']) > df_export['base_price'] * 0.05)
+        # ]
         #### TEMP ####
         
         df_export = df_export[
