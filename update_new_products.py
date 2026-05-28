@@ -250,8 +250,8 @@ class NewProductsAdder:
         df_final['category'] = df_final.apply(lambda row: category_mapper.get(row['style'], row['category']) , axis=1)
         
         st_imp_mask = (~df_final['style'].isin(category_mapper)) & (df_final['category'].isin(['ST', 'IMP', 'nan']))
-        df_final.loc[st_imp_mask, 'category'] = df_final.loc[st_imp_mask, 'style'].apply(
-            lambda style: 'ST' if quantities_in_inventory.get(style, 0) > 5 else 'IMP'
+        df_final.loc[st_imp_mask, 'category'] = df_final.loc[st_imp_mask].apply(
+            lambda row: 'ST' if quantities_in_inventory.get((row['brand'], row['style']), 0) > 5 else 'IMP', axis=1
         )
         
         # wait after relase nastavenie
